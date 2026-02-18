@@ -1,0 +1,201 @@
+name: Reusable deploy
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: false
+        type: string
+      image:
+        required: false
+        type: string
+      cluster:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      gh_environment:
+        required: false
+        type: string
+        default: ''
+      monorepo_app:
+        required: false
+        type: boolean
+        default: false
+      snapshot_disk:
+        required: false
+        type: string
+      snapshot_name:
+        required: false
+        type: string
+      snapshot_zone:
+        required: false
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+      DIGDIR_FDK_AUTODEPLOY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      DEPENDABOT_SLACK_WEBHOOK_URL:
+        required: false
+
+jobs:
+  kustomize-deploy:
+    name: Deploy to ${{ inputs.environment }} environment
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.gh_environment }}
+    env:
+      notify_all: ""
+      slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Create short sha
+        run: echo "SHORT_SHA=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+
+      - name: Set slack webhook if dependabot
+        if: github.actor == 'dependabot[bot]'
+        run: echo "slack_webhook=${{ secrets.DEPENDABOT_SLACK_WEBHOOK_URL }}" >> $GITHUB_ENV
+
+      - name: Set event vars if PR
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "event_path=pull/${{ github.event.number }}" >> $GITHUB_ENV
+          echo "event_text=Pull request" >> $GITHUB_ENV
+          echo "event_name=${{ github.head_ref }}" >> $GITHUB_ENV
+
+      - name: Set event vars if push
+        if: github.event_name == 'push'
+        run: |
+          echo "event_path=commit/${{ github.sha }}" >> $GITHUB_ENV
+          echo "event_text=Push" >> $GITHUB_ENV
+          echo "event_name=${{ github.event.head_commit.message }}" | sed 1q >> $GITHUB_ENV
+
+      - name: Set env vars if none of the above
+        if: github.event_name != 'pull_request' && github.event_name != 'push'
+        run: |
+          echo "event_path=commit/${{ github.sha }}" >> $GITHUB_ENV
+          echo "event_text=${{ github.event_name }}" >> $GITHUB_ENV
+          echo "event_name=${{ github.event.head_commit.message }}" | sed 1q >> $GITHUB_ENV
+
+      - name: Auth gcloud CLI for deploy
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.DIGDIR_FDK_AUTODEPLOY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+
+      - name: Get credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ inputs.cluster }}
+          location: europe-north1-a
+
+      - name: Create snapshot
+        if: ${{ inputs.snapshot_disk }}
+        run: |
+          gcloud compute --project ${{ inputs.cluster }} disks snapshot "${{ inputs.snapshot_disk }}" \
+          --snapshot-names "${{ inputs.snapshot_name }}-${{ env.SHORT_SHA }}" --zone "${{ inputs.snapshot_zone }}" &
+          wait
+          gcloud compute --project ${{ inputs.cluster }} snapshots add-labels "${{ inputs.snapshot_name }}-${{ env.SHORT_SHA }}" \
+          --labels="snapshotdays="14""
+
+      - name: Install kustomize
+        run: >-
+          curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.5.7/kustomize_v4.5.7_linux_amd64.tar.gz
+          | tar -xz --directory /usr/local/bin
+
+      - name: Install yq
+        run: >-
+          curl -sSLo - https://github.com/mikefarah/yq/releases/download/v4.27.5/yq_linux_amd64.tar.gz
+          | tar -xz --directory /usr/local/bin
+
+      - name: Deploy with kustomize
+        run: |
+          find deploy -name '*.yaml' | xargs sed -i "s/\$(GIT_COMMIT_SHA)/${{ github.sha }}/"
+          cd deploy/${{ inputs.environment }}
+          if ${{ inputs.monorepo_app }}; then cd ${{ inputs.app_name }}; fi
+          if [[ "${{ inputs.image }}" != "" ]]; then kustomize edit set image app=${{ inputs.image }}; fi
+          kustomize build > .build.yaml
+          kubectl apply -f .build.yaml
+          cat .build.yaml | yq 'select(.kind == "Deployment" or .kind == "Pod" or .kind == "ReplicaSet" or .kind == "StatefulSet")' | kubectl rollout status -f -
+
+      - name: Set slack message (if success)
+        if: always() && job.status == 'success'
+        run: |
+          echo "slack_emoji=:white_check_mark:" >> $GITHUB_ENV
+          echo "slack_text=Succeeded" >> $GITHUB_ENV
+          echo "slack_color=#2eb886" >> $GITHUB_ENV
+
+      - name: Set slack message (if failure)
+        if: always() && job.status == 'failure'
+        run: |
+          echo "slack_emoji=:no_entry:" >> $GITHUB_ENV
+          echo "slack_text=Failed" >> $GITHUB_ENV
+          echo "slack_color=#a30200" >> $GITHUB_ENV
+
+      - name: Notify all if failure in prod-workflow
+        if: always() && job.status == 'failure' && inputs.environment == 'prod'
+        run: echo "notify_all=@channel " >> $GITHUB_ENV
+
+      - name: Set slack message (if cancelled)
+        if: always() && job.status == 'cancelled'
+        run: |
+          echo "slack_emoji=:warning:" >> $GITHUB_ENV
+          echo "slack_text=Cancelled" >> $GITHUB_ENV
+          echo "slack_color=#daa038" >> $GITHUB_ENV
+
+      - name: Notify slack
+        id: slack
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "${{ env.slack_color }}",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ env.notify_all }}${{ env.slack_emoji }} ${{ env.slack_text }} GitHub Actions\n*Application:* ${{ inputs.app_name }}\n*Environment:* ${{ inputs.environment }}"
+                      },
+                      "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*commit:* \n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} | ${{ env.SHORT_SHA }} >"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*author:* \n${{ github.actor }}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*workflow:* \n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} | ${{ github.workflow }}>"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*${{ env.event_text }}:* \n<${{ github.server_url }}/${{ github.repository }}/${{ env.event_path }} | ${{ env.event_name }}>"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ env.slack_webhook }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        if: always()
