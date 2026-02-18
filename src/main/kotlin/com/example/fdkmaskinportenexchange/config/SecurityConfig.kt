@@ -19,6 +19,7 @@ class SecurityConfig {
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                     .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml", "/v3/api-docs.yml").permitAll()
                     .requestMatchers("/swagger-resources/**", "/webjars/**").permitAll()
+                    .requestMatchers("/actuator/health/**").permitAll()
             }
             .csrf { it.disable() }
         
