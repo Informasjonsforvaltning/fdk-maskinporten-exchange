@@ -25,46 +25,46 @@ spec:
             - name: MASKINPORTEN_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_CLIENT_ID
             - name: MASKINPORTEN_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_KEY_ID
             - name: MASKINPORTEN_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_PRIVATE_KEY
             - name: MASKINPORTEN_ISSUER
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_ISSUER
                   optional: true
             - name: MASKINPORTEN_TOKEN_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_TOKEN_ENDPOINT
                   optional: true
             - name: MASKINPORTEN_JWKS_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_JWKS_ENDPOINT
                   optional: true
             - name: MASKINPORTEN_SCOPE
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: MASKINPORTEN_SCOPE
                   optional: true
             - name: LOG_LEVEL
               valueFrom:
                 secretKeyRef:
-                  name: fdk-maskinporten-exchange-staging
+                  name: fdk-maskinporten-exchange
                   key: LOG_LEVEL
                   optional: true
           image: fdk-maskinporten-exchange
