@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    fdk.service: user-api
+  name: fdk-maskinporten-exchange
+spec:
+  type: NodePort
+  ports:
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  selector:
+    fdk.service: fdk-maskinporten-exchange

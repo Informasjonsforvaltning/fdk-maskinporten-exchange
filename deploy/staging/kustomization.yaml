@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: staging
 resources:
   - deployment-fdk-maskinporten-exchange.yaml
+  - service-fdk-maskinporten-exchange.yaml
 images:
   - name: fdk-maskinporten-exchange
     newName: ghcr.io/informasjonsforvaltning/fdk-maskinporten-exchange
