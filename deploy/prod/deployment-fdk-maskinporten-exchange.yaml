@@ -22,6 +22,11 @@ spec:
       containers:
         - name: fdk-maskinporten-exchange
           env:
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fdk-maskinporten-exchange
+                  key: INTERNAL_API_KEY
             - name: MASKINPORTEN_CLIENT_ID
               valueFrom:
                 secretKeyRef:
