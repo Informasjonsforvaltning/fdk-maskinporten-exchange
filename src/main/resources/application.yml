@@ -8,6 +8,11 @@ logging:
 server:
   port: 8080
 
+security:
+  api-key:
+    header-name: ${INTERNAL_API_KEY_HEADER:X-API-Key}
+    value: ${INTERNAL_API_KEY:}
+
 management:
   endpoint:
     health:
