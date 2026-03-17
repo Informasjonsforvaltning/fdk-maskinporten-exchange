@@ -1,4 +1,4 @@
-package com.example.fdkmaskinportenexchange
+package no.digdir.fdk.maskinportenexchange
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

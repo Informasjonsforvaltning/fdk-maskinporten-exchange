@@ -1,4 +1,4 @@
-package com.example.fdkmaskinportenexchange.config
+package no.digdir.fdk.maskinportenexchange.config
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI

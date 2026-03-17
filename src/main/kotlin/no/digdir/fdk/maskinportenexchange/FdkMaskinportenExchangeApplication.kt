@@ -1,4 +1,4 @@
-package com.example.fdkmaskinportenexchange
+package no.digdir.fdk.maskinportenexchange
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.SpringApplication

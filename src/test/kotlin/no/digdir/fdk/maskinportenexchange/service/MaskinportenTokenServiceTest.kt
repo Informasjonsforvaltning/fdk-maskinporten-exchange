@@ -1,6 +1,6 @@
-package com.example.fdkmaskinportenexchange.service
+package no.digdir.fdk.maskinportenexchange.service
 
-import com.example.fdkmaskinportenexchange.config.MaskinportenProperties
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

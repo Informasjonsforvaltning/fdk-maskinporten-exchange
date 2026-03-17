@@ -1,7 +1,7 @@
-package com.example.fdkmaskinportenexchange.controller
+package no.digdir.fdk.maskinportenexchange.controller
 
-import com.example.fdkmaskinportenexchange.service.MaskinportenClient
-import com.example.fdkmaskinportenexchange.service.MaskinportenTokenService
+import no.digdir.fdk.maskinportenexchange.service.MaskinportenClient
+import no.digdir.fdk.maskinportenexchange.service.MaskinportenTokenService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

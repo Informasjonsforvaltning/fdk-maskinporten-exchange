@@ -1,6 +1,6 @@
-package com.example.fdkmaskinportenexchange.service
+package no.digdir.fdk.maskinportenexchange.service
 
-import com.example.fdkmaskinportenexchange.config.MaskinportenProperties
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import com.nimbusds.jose.JOSEException
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm

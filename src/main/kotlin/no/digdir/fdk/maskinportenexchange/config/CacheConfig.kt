@@ -1,4 +1,4 @@
-package com.example.fdkmaskinportenexchange.config
+package no.digdir.fdk.maskinportenexchange.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.springframework.cache.CacheManager

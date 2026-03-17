@@ -1,11 +1,10 @@
-package com.example.fdkmaskinportenexchange.controller
+package no.digdir.fdk.maskinportenexchange.controller
 
-import com.example.fdkmaskinportenexchange.service.MaskinportenClient
-import com.example.fdkmaskinportenexchange.service.MaskinportenTokenService
+import no.digdir.fdk.maskinportenexchange.service.MaskinportenClient
+import no.digdir.fdk.maskinportenexchange.service.MaskinportenTokenService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses

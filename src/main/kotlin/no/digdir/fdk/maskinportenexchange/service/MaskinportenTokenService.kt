@@ -1,6 +1,6 @@
-package com.example.fdkmaskinportenexchange.service
+package no.digdir.fdk.maskinportenexchange.service
 
-import com.example.fdkmaskinportenexchange.config.MaskinportenProperties
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable

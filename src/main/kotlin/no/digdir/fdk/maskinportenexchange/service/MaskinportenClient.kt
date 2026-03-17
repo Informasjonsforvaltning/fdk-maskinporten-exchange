@@ -1,6 +1,6 @@
-package com.example.fdkmaskinportenexchange.service
+package no.digdir.fdk.maskinportenexchange.service
 
-import com.example.fdkmaskinportenexchange.config.MaskinportenProperties
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.media.Schema

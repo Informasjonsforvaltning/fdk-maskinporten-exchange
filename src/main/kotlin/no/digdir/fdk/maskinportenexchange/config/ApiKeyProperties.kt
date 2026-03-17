@@ -1,4 +1,4 @@
-package com.example.fdkmaskinportenexchange.config
+package no.digdir.fdk.maskinportenexchange.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.bind.DefaultValue
@@ -9,4 +9,3 @@ data class ApiKeyProperties(
     val headerName: String,
     val value: String?
 )
-
