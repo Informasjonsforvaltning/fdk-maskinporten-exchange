@@ -1,7 +1,7 @@
 package com.example.fdkmaskinportenexchange.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
@@ -16,6 +16,6 @@ class MaskinportenConfig {
 
     @Bean
     fun objectMapper(): ObjectMapper {
-        return ObjectMapper().registerModule(KotlinModule())
+        return ObjectMapper().registerKotlinModule()
     }
 }
