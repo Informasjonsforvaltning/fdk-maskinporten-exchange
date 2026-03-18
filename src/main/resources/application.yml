@@ -1,0 +1,66 @@
+logging:
+  level:
+    root: WARN
+    no: ${LOG_LEVEL:DEBUG}
+    org.springframework: WARN
+    org.springframework.web: WARN
+
+server:
+  port: 8080
+
+security:
+  api-key:
+    header-name: ${INTERNAL_API_KEY_HEADER:X-API-Key}
+    value: ${INTERNAL_API_KEY:}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+spring:
+  application:
+    name: fdk-maskinporten-exchange
+
+maskinporten:
+  issuer: ${MASKINPORTEN_ISSUER:https://maskinporten.no}
+  token-endpoint: ${MASKINPORTEN_TOKEN_ENDPOINT:https://maskinporten.no/token}
+  jwks-endpoint: ${MASKINPORTEN_JWKS_ENDPOINT:https://maskinporten.no/jwk}
+  client-id: ${MASKINPORTEN_CLIENT_ID}
+  scope: ${MASKINPORTEN_SCOPE:altinn:accessmanagement/authorizedparties.resourceowner}
+  key-id: ${MASKINPORTEN_KEY_ID}
+  private-key:
+    content: ${MASKINPORTEN_PRIVATE_KEY}
+  token:
+    cache:
+      enabled: true
+      duration-seconds: 3600
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+maskinporten:
+  issuer: ${MASKINPORTEN_ISSUER:https://maskinporten.invalid}
+  token-endpoint: ${MASKINPORTEN_TOKEN_ENDPOINT:https://maskinporten.invalid/token}
+  jwks-endpoint: ${MASKINPORTEN_JWKS_ENDPOINT:https://maskinporten.invalid/jwk}
+  client-id: ${MASKINPORTEN_CLIENT_ID:test-client-id}
+  scope: ${MASKINPORTEN_SCOPE:altinn:accessmanagement/authorizedparties.resourceowner}
+  key-id: ${MASKINPORTEN_KEY_ID:test-key-id}
+  private-key:
+    content: ${MASKINPORTEN_PRIVATE_KEY}
+
