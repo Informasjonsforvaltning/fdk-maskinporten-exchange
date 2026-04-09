@@ -10,10 +10,13 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
@@ -26,6 +29,11 @@ class MaskinportenClient(
 ) {
     private val logger = LoggerFactory.getLogger(MaskinportenClient::class.java)
 
+    @Retryable(
+        retryFor = [ResourceAccessException::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 1000, multiplier = 2.0)
+    )
     @Throws(Exception::class)
     fun requestToken(scope: String? = null): TokenResponse {
         val assertion = jwtAssertionBuilder.buildJwtAssertion(scope)
@@ -61,6 +69,9 @@ class MaskinportenClient(
             val errorMessage = parseErrorResponse(e.responseBodyAsString, e.statusCode, scope)
             logger.error("HTTP error from Maskinporten: Status={}, Response={}, Error={}", e.statusCode, e.responseBodyAsString, errorMessage)
             throw RuntimeException(errorMessage, e)
+        } catch (e: ResourceAccessException) {
+            logger.warn("I/O error calling Maskinporten (will retry if attempts remain): {}", e.message)
+            throw e
         } catch (e: RestClientException) {
             logger.error("Error calling Maskinporten", e)
             throw RuntimeException("Failed to communicate with Maskinporten", e)
