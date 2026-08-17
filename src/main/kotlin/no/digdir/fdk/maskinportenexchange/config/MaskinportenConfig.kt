@@ -23,7 +23,5 @@ class MaskinportenConfig {
     }
 
     @Bean
-    fun objectMapper(): ObjectMapper {
-        return ObjectMapper().registerKotlinModule()
-    }
+    fun objectMapper(): ObjectMapper = ObjectMapper().registerKotlinModule()
 }

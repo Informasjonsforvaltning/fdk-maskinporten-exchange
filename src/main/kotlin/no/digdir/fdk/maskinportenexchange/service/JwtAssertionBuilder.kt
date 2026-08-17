@@ -1,6 +1,5 @@
 package no.digdir.fdk.maskinportenexchange.service
 
-import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import com.nimbusds.jose.JOSEException
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
@@ -8,6 +7,7 @@ import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.security.KeyFactory
@@ -21,9 +21,7 @@ import java.util.Date
 import java.util.UUID
 
 @Component
-class JwtAssertionBuilder(
-    private val properties: MaskinportenProperties
-) {
+class JwtAssertionBuilder(private val properties: MaskinportenProperties) {
     private var privateKey: RSAPrivateKey? = null
 
     @Throws(JOSEException::class, IOException::class, NoSuchAlgorithmException::class, InvalidKeySpecException::class)
@@ -48,11 +46,11 @@ class JwtAssertionBuilder(
 
         val headerBuilder = JWSHeader.Builder(JWSAlgorithm.RS256)
             .type(JOSEObjectType.JWT)
-        
+
         properties.keyId?.takeIf { it.isNotEmpty() }?.let {
             headerBuilder.keyID(it)
         }
-        
+
         val signedJWT = SignedJWT(headerBuilder.build(), claimsSet)
         signedJWT.sign(RSASSASigner(key))
 
@@ -60,15 +58,13 @@ class JwtAssertionBuilder(
     }
 
     @Throws(IOException::class, NoSuchAlgorithmException::class, InvalidKeySpecException::class)
-    private fun getPrivateKey(): RSAPrivateKey {
-        return privateKey ?: loadPrivateKey().also { privateKey = it }
-    }
+    private fun getPrivateKey(): RSAPrivateKey = privateKey ?: loadPrivateKey().also { privateKey = it }
 
     @Throws(IOException::class, NoSuchAlgorithmException::class, InvalidKeySpecException::class)
     private fun loadPrivateKey(): RSAPrivateKey {
-        val keyContent = properties.privateKey?.content 
+        val keyContent = properties.privateKey?.content
             ?: throw IllegalArgumentException("Private key content must be configured")
-        
+
         val cleanedKeyContent = keyContent
             .replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
@@ -79,7 +75,7 @@ class JwtAssertionBuilder(
         val keyBytes = Base64.getDecoder().decode(cleanedKeyContent)
         val keySpec = PKCS8EncodedKeySpec(keyBytes)
         val keyFactory = KeyFactory.getInstance("RSA")
-        
+
         return keyFactory.generatePrivate(keySpec) as RSAPrivateKey
     }
 
@@ -87,7 +83,7 @@ class JwtAssertionBuilder(
         if (scope.isNullOrBlank()) {
             return scope
         }
-        
+
         return scope
             .split(",")
             .map { it.trim() }

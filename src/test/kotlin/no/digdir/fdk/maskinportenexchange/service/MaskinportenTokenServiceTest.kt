@@ -1,13 +1,23 @@
 package no.digdir.fdk.maskinportenexchange.service
 
 import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
-import org.junit.jupiter.api.Assertions.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
 class MaskinportenTokenServiceTest {
@@ -57,7 +67,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = false
@@ -81,7 +91,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = true
@@ -95,9 +105,11 @@ class MaskinportenTokenServiceTest {
         val field = MaskinportenTokenService::class.java.getDeclaredField("self")
         field.isAccessible = true
         field.set(spyService, spyService)
-        
+
         val cachedWrapper = MaskinportenTokenService.CachedTokenWrapper(response, java.time.Instant.now())
-        whenever(spyService.getCachedTokenResponse(eq("altinn:serviceowners/read"), eq("altinn:serviceowners/read"))).thenReturn(cachedWrapper)
+        whenever(
+            spyService.getCachedTokenResponse(eq("altinn:serviceowners/read"), eq("altinn:serviceowners/read")),
+        ).thenReturn(cachedWrapper)
 
         val token1 = spyService.getAccessToken()
         val token2 = spyService.getAccessToken()
@@ -114,7 +126,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = true
@@ -138,7 +150,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = true
@@ -197,7 +209,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = true
@@ -209,7 +221,7 @@ class MaskinportenTokenServiceTest {
 
         tokenService.getAccessToken()
         tokenService.clearCache()
-        
+
         val token2 = tokenService.getAccessToken()
 
         assertNotNull(token2)
@@ -227,7 +239,7 @@ class MaskinportenTokenServiceTest {
         }
 
         whenever(mockClient.requestToken(any())).thenReturn(response)
-        
+
         val tokenConfig = MaskinportenProperties.Token().apply {
             cache = MaskinportenProperties.Token.Cache().apply {
                 enabled = true
@@ -241,9 +253,14 @@ class MaskinportenTokenServiceTest {
         val field = MaskinportenTokenService::class.java.getDeclaredField("self")
         field.isAccessible = true
         field.set(spyService, spyService)
-        
+
         val cachedWrapper = MaskinportenTokenService.CachedTokenWrapper(response, java.time.Instant.now())
-        whenever(spyService.getCachedTokenResponse(eq("altinn:serviceowners/read altinn:serviceowners/write"), eq("altinn:serviceowners/read altinn:serviceowners/write"))).thenReturn(cachedWrapper)
+        whenever(
+            spyService.getCachedTokenResponse(
+                eq("altinn:serviceowners/read altinn:serviceowners/write"),
+                eq("altinn:serviceowners/read altinn:serviceowners/write"),
+            ),
+        ).thenReturn(cachedWrapper)
 
         val response1 = spyService.getTokenResponse()
         assertEquals("test-access-token", response1.accessToken)

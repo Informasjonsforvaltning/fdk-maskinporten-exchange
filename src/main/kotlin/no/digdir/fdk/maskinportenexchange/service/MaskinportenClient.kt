@@ -1,9 +1,9 @@
 package no.digdir.fdk.maskinportenexchange.service
 
-import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.media.Schema
+import no.digdir.fdk.maskinportenexchange.config.MaskinportenProperties
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -25,14 +25,14 @@ class MaskinportenClient(
     private val restTemplate: RestTemplate,
     private val properties: MaskinportenProperties,
     private val jwtAssertionBuilder: JwtAssertionBuilder,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(MaskinportenClient::class.java)
 
     @Retryable(
         retryFor = [ResourceAccessException::class],
         maxAttempts = 3,
-        backoff = Backoff(delay = 1000, multiplier = 2.0)
+        backoff = Backoff(delay = 1000, multiplier = 2.0),
     )
     @Throws(Exception::class)
     fun requestToken(scope: String? = null): TokenResponse {
@@ -48,26 +48,31 @@ class MaskinportenClient(
         }
 
         val request = HttpEntity(body, headers)
-        val endpoint = properties.tokenEndpoint 
+        val endpoint = properties.tokenEndpoint
             ?: throw IllegalArgumentException("Token endpoint not configured")
 
         return try {
             val response = restTemplate.postForEntity(endpoint, request, TokenResponse::class.java)
-            val tokenResponse = response.body 
+            val tokenResponse = response.body
                 ?: throw IllegalStateException("Empty response from Maskinporten")
-            
+
             if (tokenResponse.accessToken == null) {
                 throw IllegalStateException("Missing access_token in response")
             }
-            
+
             tokenResponse.scope?.let {
                 tokenResponse.scopes = it.split(" ").filter { scope -> scope.isNotBlank() }
             }
-            
+
             tokenResponse
         } catch (e: HttpClientErrorException) {
             val errorMessage = parseErrorResponse(e.responseBodyAsString, e.statusCode, scope)
-            logger.error("HTTP error from Maskinporten: Status={}, Response={}, Error={}", e.statusCode, e.responseBodyAsString, errorMessage)
+            logger.error(
+                "HTTP error from Maskinporten: Status={}, Response={}, Error={}",
+                e.statusCode,
+                e.responseBodyAsString,
+                errorMessage,
+            )
             throw RuntimeException(errorMessage, e)
         } catch (e: ResourceAccessException) {
             logger.warn("I/O error calling Maskinporten (will retry if attempts remain): {}", e.message)
@@ -102,9 +107,14 @@ class MaskinportenClient(
 
     private fun parseErrorResponse(responseBody: String?, statusCode: HttpStatusCode, requestedScope: String?): String {
         val statusValue = statusCode.value()
+        val scopeHint = if (requestedScope != null) {
+            "The requested scope '$requestedScope' may not be available or you may not have access to it."
+        } else {
+            ""
+        }
         if (responseBody.isNullOrBlank()) {
             return when (statusValue) {
-                400 -> "Bad request to Maskinporten. ${if (requestedScope != null) "The requested scope '$requestedScope' may not be available or you may not have access to it." else ""}"
+                400 -> "Bad request to Maskinporten. $scopeHint"
                 401 -> "Unauthorized. Check your client credentials and key configuration."
                 403 -> "Forbidden. You may not have permission to access this resource."
                 else -> "Maskinporten returned error: $statusCode"
@@ -115,7 +125,7 @@ class MaskinportenClient(
             val errorResponse = objectMapper.readValue(responseBody, ErrorResponse::class.java)
             val errorCode = errorResponse.error ?: "unknown_error"
             val errorDescription = errorResponse.errorDescription ?: ""
-            
+
             when (errorCode) {
                 "invalid_scope" -> {
                     val scopeMessage = if (requestedScope != null) {
@@ -130,9 +140,13 @@ class MaskinportenClient(
                     }
                     message.trim()
                 }
+
                 "invalid_grant" -> "Invalid grant: $errorDescription".trim()
+
                 "invalid_client" -> "Invalid client credentials: $errorDescription".trim()
+
                 "invalid_request" -> "Invalid request: $errorDescription".trim()
+
                 else -> {
                     val baseMessage = "Maskinporten error ($errorCode)"
                     if (errorDescription.isNotBlank()) {
@@ -145,7 +159,7 @@ class MaskinportenClient(
         } catch (ex: Exception) {
             logger.debug("Failed to parse error response as JSON", ex)
             when (statusValue) {
-                400 -> "Bad request to Maskinporten. ${if (requestedScope != null) "The requested scope '$requestedScope' may not be available or you may not have access to it." else ""} Response: $responseBody"
+                400 -> "Bad request to Maskinporten. $scopeHint Response: $responseBody"
                 else -> "Maskinporten returned error: $statusCode. Response: $responseBody"
             }
         }

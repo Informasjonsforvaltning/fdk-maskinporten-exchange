@@ -1,8 +1,11 @@
 package no.digdir.fdk.maskinportenexchange.config
 
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -12,16 +15,11 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint
 import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.web.filter.OncePerRequestFilter
-import jakarta.servlet.FilterChain
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(ApiKeyProperties::class)
-class SecurityConfig(
-    private val apiKeyProperties: ApiKeyProperties
-) {
+class SecurityConfig(private val apiKeyProperties: ApiKeyProperties) {
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -43,29 +41,21 @@ class SecurityConfig(
                     RequestMatcher { request ->
                         val path = request.requestURI
                         path == "/api/maskinporten" || path.startsWith("/api/maskinporten/")
-                    }
+                    },
                 ),
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter::class.java
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter::class.java,
             )
 
         return http.build()
     }
 }
 
-class ApiKeyAuthenticationFilter(
-    private val properties: ApiKeyProperties,
-    private val protectedMatcher: RequestMatcher
-) : OncePerRequestFilter() {
+class ApiKeyAuthenticationFilter(private val properties: ApiKeyProperties, private val protectedMatcher: RequestMatcher) :
+    OncePerRequestFilter() {
 
-    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        return !protectedMatcher.matches(request)
-    }
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean = !protectedMatcher.matches(request)
 
-    override fun doFilterInternal(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        filterChain: FilterChain
-    ) {
+    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         val configuredApiKey = properties.value
         if (configuredApiKey.isNullOrBlank()) {
             response.status = HttpServletResponse.SC_FORBIDDEN
@@ -83,7 +73,7 @@ class ApiKeyAuthenticationFilter(
         val authentication = UsernamePasswordAuthenticationToken(
             "internal-service",
             null,
-            listOf(SimpleGrantedAuthority("ROLE_INTERNAL"))
+            listOf(SimpleGrantedAuthority("ROLE_INTERNAL")),
         )
         SecurityContextHolder.getContext().authentication = authentication
 

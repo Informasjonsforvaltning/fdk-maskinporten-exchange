@@ -23,12 +23,14 @@ class OpenApiConfig {
             .info(
                 Info()
                     .title("FDK Maskinporten API")
-                    .description("API for obtaining and managing Maskinporten access tokens. Use **Authorize** to set the API key required for protected endpoints.")
+                    .description(
+                        "API for obtaining and managing Maskinporten access tokens. Use **Authorize** to set the API key required for protected endpoints.",
+                    )
                     .version("1.0.0")
                     .contact(
                         Contact()
-                            .name("Maskinporten POC")
-                    )
+                            .name("Maskinporten POC"),
+                    ),
             )
             .components(
                 Components()
@@ -38,8 +40,8 @@ class OpenApiConfig {
                             .type(SecurityScheme.Type.APIKEY)
                             .`in`(SecurityScheme.In.HEADER)
                             .name(apiKeyHeaderName)
-                            .description("API key for service-to-service authentication")
-                    )
+                            .description("API key for service-to-service authentication"),
+                    ),
             )
             .addSecurityItem(SecurityRequirement().addList(schemeName))
     }
