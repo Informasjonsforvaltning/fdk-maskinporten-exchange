@@ -13,25 +13,23 @@ import java.time.Instant
 class MaskinportenTokenService(
     private val client: MaskinportenClient,
     private val properties: MaskinportenProperties,
-    @param:Lazy private val self: MaskinportenTokenService
+    @param:Lazy private val self: MaskinportenTokenService,
 ) {
     private val logger = LoggerFactory.getLogger(MaskinportenTokenService::class.java)
 
     @Throws(Exception::class)
-    fun getAccessToken(scope: String? = null): String {
-        return getTokenResponse(scope).accessToken 
-            ?: throw IllegalStateException("Access token is null")
-    }
+    fun getAccessToken(scope: String? = null): String = getTokenResponse(scope).accessToken
+        ?: throw IllegalStateException("Access token is null")
 
     @Throws(Exception::class)
     fun getTokenResponse(scope: String? = null): MaskinportenClient.TokenResponse {
         val normalizedScope = normalizeScope(scope ?: properties.scope)
         val cacheKey = normalizedScope ?: "default"
-        
+
         return if (isCacheEnabled()) {
             val cachedWrapper = self.getCachedTokenResponse(cacheKey, normalizedScope)
             val updatedResponse = updateExpiresIn(cachedWrapper)
-            
+
             if (updatedResponse.expiresIn <= 0) {
                 logger.debug("Token expired (expires_in: {}), evicting from cache and fetching new token", updatedResponse.expiresIn)
                 evictFromCache(cacheKey)
@@ -52,16 +50,16 @@ class MaskinportenTokenService(
     @Cacheable(
         cacheNames = ["maskinportenTokens"],
         key = "#cacheKey",
-        unless = "#result == null || #result.tokenResponse.expiresIn <= 0"
+        unless = "#result == null || #result.tokenResponse.expiresIn <= 0",
     )
     fun getCachedTokenResponse(cacheKey: String, scope: String?): CachedTokenWrapper {
         logger.debug("Cache miss, fetching new token from Maskinporten for scope: {}", scope)
         val response = client.requestToken(scope)
-        
+
         if (response.expiresIn <= 0) {
             logger.warn("Received token with expires_in: {} - token is already expired, will not cache", response.expiresIn)
         }
-        
+
         return CachedTokenWrapper(response, Instant.now())
     }
 
@@ -69,11 +67,11 @@ class MaskinportenTokenService(
         val response = wrapper.tokenResponse
         val cachedAt = wrapper.cachedAt
         val now = Instant.now()
-        
+
         val elapsedSeconds = now.epochSecond - cachedAt.epochSecond
         val originalExpiresIn = response.expiresIn
         val remainingSeconds = maxOf(originalExpiresIn - elapsedSeconds.toInt(), 0)
-        
+
         val updatedResponse = MaskinportenClient.TokenResponse().apply {
             accessToken = response.accessToken
             tokenType = response.tokenType
@@ -81,18 +79,18 @@ class MaskinportenTokenService(
             scope = response.scope
             scopes = response.scopes
         }
-        
+
         logger.debug(
             "Updated expires_in from {} to {} seconds (elapsed: {} seconds)",
-            originalExpiresIn, remainingSeconds, elapsedSeconds
+            originalExpiresIn,
+            remainingSeconds,
+            elapsedSeconds,
         )
-        
+
         return updatedResponse
     }
 
-    private fun isCacheEnabled(): Boolean {
-        return properties.token?.cache?.enabled == true
-    }
+    private fun isCacheEnabled(): Boolean = properties.token?.cache?.enabled == true
 
     private fun normalizeScope(scope: String?): String? {
         if (scope.isNullOrBlank()) {
@@ -117,8 +115,5 @@ class MaskinportenTokenService(
         logger.debug("Evicting token from cache for key: {}", cacheKey)
     }
 
-    data class CachedTokenWrapper(
-        val tokenResponse: MaskinportenClient.TokenResponse,
-        val cachedAt: Instant
-    )
+    data class CachedTokenWrapper(val tokenResponse: MaskinportenClient.TokenResponse, val cachedAt: Instant)
 }

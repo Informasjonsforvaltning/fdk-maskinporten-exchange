@@ -7,5 +7,5 @@ import org.springframework.boot.context.properties.bind.DefaultValue
 data class ApiKeyProperties(
     @DefaultValue("X-API-Key")
     val headerName: String,
-    val value: String?
+    val value: String?,
 )

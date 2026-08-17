@@ -1,14 +1,17 @@
 package no.digdir.fdk.maskinportenexchange.config
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 
 class MaskinportenPropertiesTest {
 
     @Test
     fun testGettersAndSetters() {
         val properties = MaskinportenProperties()
-        
+
         properties.issuer = "https://test.maskinporten.no"
         properties.tokenEndpoint = "https://test.maskinporten.no/token"
         properties.clientId = "test-client-id"
@@ -26,7 +29,7 @@ class MaskinportenPropertiesTest {
     fun testPrivateKeyGettersAndSetters() {
         val properties = MaskinportenProperties()
         val privateKey = MaskinportenProperties.PrivateKey()
-        
+
         privateKey.content = "-----BEGIN PRIVATE KEY-----\ntest-key-content\n-----END PRIVATE KEY-----"
         properties.privateKey = privateKey
 
@@ -39,7 +42,7 @@ class MaskinportenPropertiesTest {
         val properties = MaskinportenProperties()
         val token = MaskinportenProperties.Token()
         val cache = MaskinportenProperties.Token.Cache()
-        
+
         cache.enabled = true
         cache.durationSeconds = 3600
         token.cache = cache
@@ -56,7 +59,7 @@ class MaskinportenPropertiesTest {
         val properties = MaskinportenProperties()
         val token = MaskinportenProperties.Token()
         val cache = MaskinportenProperties.Token.Cache()
-        
+
         cache.enabled = false
         cache.durationSeconds = 1800
         token.cache = cache

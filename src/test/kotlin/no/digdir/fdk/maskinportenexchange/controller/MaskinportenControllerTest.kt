@@ -2,15 +2,19 @@ package no.digdir.fdk.maskinportenexchange.controller
 
 import no.digdir.fdk.maskinportenexchange.service.MaskinportenClient
 import no.digdir.fdk.maskinportenexchange.service.MaskinportenTokenService
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.junit.jupiter.api.Assertions.*
 
 @ExtendWith(MockitoExtension::class)
 class MaskinportenControllerTest {
